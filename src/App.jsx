@@ -44,7 +44,7 @@ function App() {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
 
       if (!res.ok) {
-        throw new Error(`Error ${res.status}: No se pudieron obtener las imágenes`)
+        throw new Error(`Error ${res.status}: No se pudieron obtener las imágenes.`)
       }
 
       const data = await res.json()
