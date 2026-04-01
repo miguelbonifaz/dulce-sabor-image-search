@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             const url = new URL(path, 'http://localhost')
             const q = url.searchParams.get('q') || ''
-            return `/search.json?engine=google_images&q=${encodeURIComponent(q)}&api_key=${env.VITE_SERPAPI_KEY}`
+            return `/search.json?engine=google_images&q=${encodeURIComponent(q)}&api_key=${env.VITE_SERPAPI}`
           },
         },
       },
