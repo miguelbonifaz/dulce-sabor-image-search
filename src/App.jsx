@@ -4,6 +4,7 @@ import ImageGrid from './components/ImageGrid'
 import ConfirmModal from './components/ConfirmModal'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || ''
+const IMAGE_SELECTED_WEBHOOK_URL = import.meta.env.VITE_IMAGE_SELECTED_WEBHOOK_URL || ''
 
 function App() {
   const [query, setQuery] = useState('')
@@ -13,6 +14,7 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [requestNumber, setRequestNumber] = useState('')
 
   const autoSearchDone = useRef(false)
 
@@ -20,11 +22,14 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const imageQuery = params.get('image') || ''
+    const number = params.get('number') || ''
 
     if (imageQuery && !autoSearchDone.current) {
       autoSearchDone.current = true
       setQuery(imageQuery)
     }
+
+    setRequestNumber(number)
   }, [])
 
   const searchImages = useCallback(async (searchQuery) => {
@@ -73,20 +78,23 @@ function App() {
   }
 
   const handleConfirm = async () => {
-    const number = WHATSAPP_NUMBER
     const imageUrl =
       selectedImage?.original || selectedImage?.image || selectedImage?.thumbnail || ''
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 5000)
 
     try {
-      await fetch('https://zilver-n8n.flowship.dev/webhook/c6e0bd72-3dda-422b-af75-8055858004fd', {
+      if (!IMAGE_SELECTED_WEBHOOK_URL) {
+        throw new Error('Falta configurar VITE_IMAGE_SELECTED_WEBHOOK_URL.')
+      }
+
+      await fetch(IMAGE_SELECTED_WEBHOOK_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          number,
+          number: requestNumber,
           imageUrl,
         }),
         signal: controller.signal,
@@ -97,11 +105,8 @@ function App() {
       window.clearTimeout(timeoutId)
     }
 
-    if (number) {
-      window.location.href = `https://wa.me/${number}`
-    } else {
-      window.location.href = 'https://wa.me/'
-    }
+    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}`
+
   }
 
   const handleCancel = () => {
