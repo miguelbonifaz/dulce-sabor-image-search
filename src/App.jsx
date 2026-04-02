@@ -3,6 +3,8 @@ import SearchBar from './components/SearchBar'
 import ImageGrid from './components/ImageGrid'
 import ConfirmModal from './components/ConfirmModal'
 
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || ''
+
 function App() {
   const [query, setQuery] = useState('')
   const [images, setImages] = useState([])
@@ -12,16 +14,12 @@ function App() {
   const [showModal, setShowModal] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
 
-  const userNumberRef = useRef('')
   const autoSearchDone = useRef(false)
 
   // Read query params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const userNumber = params.get('user_number') || ''
     const imageQuery = params.get('image') || ''
-
-    userNumberRef.current = userNumber
 
     if (imageQuery && !autoSearchDone.current) {
       autoSearchDone.current = true
@@ -75,7 +73,7 @@ function App() {
   }
 
   const handleConfirm = async () => {
-    const number = userNumberRef.current
+    const number = WHATSAPP_NUMBER
     const imageUrl =
       selectedImage?.original || selectedImage?.image || selectedImage?.thumbnail || ''
     const controller = new AbortController()
