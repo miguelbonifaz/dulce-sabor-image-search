@@ -4,7 +4,6 @@ import ImageGrid from './components/ImageGrid'
 import ConfirmModal from './components/ConfirmModal'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || ''
-const IMAGE_SELECTED_WEBHOOK_URL = import.meta.env.VITE_IMAGE_SELECTED_WEBHOOK_URL || ''
 
 function App() {
   const [query, setQuery] = useState('')
@@ -14,7 +13,6 @@ function App() {
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
-  const [requestNumber, setRequestNumber] = useState('')
 
   const autoSearchDone = useRef(false)
 
@@ -22,14 +20,11 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const imageQuery = params.get('image') || ''
-    const number = params.get('number') || ''
 
     if (imageQuery && !autoSearchDone.current) {
       autoSearchDone.current = true
       setQuery(imageQuery)
     }
-
-    setRequestNumber(number)
   }, [])
 
   const searchImages = useCallback(async (searchQuery) => {
@@ -78,27 +73,29 @@ function App() {
   }
 
   const handleConfirm = async () => {
-    const imageUrl =
-      selectedImage?.original || selectedImage?.image || selectedImage?.thumbnail || ''
+    const imageUrl = selectedImage?.original || ''
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), 5000)
 
     try {
-      if (!IMAGE_SELECTED_WEBHOOK_URL) {
-        throw new Error('Falta configurar VITE_IMAGE_SELECTED_WEBHOOK_URL.')
+      if (!imageUrl) {
+        throw new Error('Missing imageUrl')
       }
 
-      await fetch(IMAGE_SELECTED_WEBHOOK_URL, {
+      const response = await fetch('/api/image-selected', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          number: requestNumber,
           imageUrl,
         }),
         signal: controller.signal,
       })
+
+      if (!response.ok) {
+        throw new Error(`Image selection request failed with status ${response.status}`)
+      }
     } catch (err) {
       console.error('No se pudo enviar la selección al webhook.', err)
     } finally {
